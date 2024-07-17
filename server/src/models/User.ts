@@ -1,18 +1,47 @@
-import { Schema, model} from 'mongoose';
+import { DataTypes, Model } from 'sequelize';
+import sequelize from './sequelize'; // Adjust the path as per your file structure
 
-export interface IUser{
-    _id?: string;
-    username: string;
-    password: string;
-    availableMoney: number;
-    // purchasedItems: string[];
-};
+interface UserAttributes {
+  id?: number;
+  username: string;
+  password: string;
+  availableMoney: number;
+}
 
-const UserSchema = new Schema<IUser>({
-    username: {type: String, required: true, unique: true},
-    password: {type: String, required: true},
-    availableMoney: {type: Number, default: 5000},
-    // purchasedItems: {type: string, required: true},
-})
+class User extends Model<UserAttributes> implements UserAttributes {
+  public id!: number;
+  public username!: string;
+  public password!: string;
+  public availableMoney!: number;
+}
 
-export const UserModel = model<IUser>('user', UserSchema);
+User.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    username: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    availableMoney: {
+      type: DataTypes.INTEGER,
+      defaultValue: 5000,
+    },
+  },
+  {
+    sequelize, // Pass the sequelize instance
+    modelName: 'User',
+    tableName: 'users',
+    timestamps: true,
+  }
+);
+
+export default User;

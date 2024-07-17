@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link} from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import Auth from './pages/auth/Auth';
+import { Auth } from './pages/auth/Auth';
 import PurchasedItems from './pages/purchasedItems/PurchasedItems';
 import Checkout from './pages/checkout/Checkout';
 import Shop from './pages/shop/Shop';

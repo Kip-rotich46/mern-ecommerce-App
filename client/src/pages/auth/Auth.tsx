@@ -1,8 +1,11 @@
-import React, { SyntheticEvent, useState } from "react";
-import { UserErrors } from "../../error";
+import React, { useContext, useState } from "react";
 import axios from "axios";
+import { useCookies } from "react-cookie";
+import { useNavigate } from "react-router-dom";
+import "./auth.css";
+import { UserErrors } from '../../models/error';
 
-const Auth = () => {
+export const Auth = () => {
   return (
     <div className="auth">
       <Register />
@@ -11,23 +14,88 @@ const Auth = () => {
   );
 };
 
-const Register = () => {
+const Login = () => {
+  const [_, setCookies] = useCookies(["access_token"]);
+  // const { setIsAuthenticated } = useContext<IShopContext>(ShopContext);
+
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  const handleSubmit = async (event: SyntheticEvent) => {
-    event.preventDefault();
-    try {
+  const navigate = useNavigate();
 
-      await axios.post("http://localhost:3001/user/register", {
+  const handleSubmit = async (event:any) => {
+    event.preventDefault();
+
+    try {
+      const result = await axios.post("http://localhost:3001/auth/login", {
         username,
         password,
       });
 
-      alert("Registration successful. You can now Login");
-    } catch (err: any) {
-      if (err?.response?.type === UserErrors.USERNAME_ALREADY_EXISTS) {
-        alert("ERROR: Username Already In Use");
+      setCookies("access_token", result.data.token);
+      window.localStorage.setItem("userID", result.data.userID);
+      // setIsAuthenticated(true);
+      navigate("/");
+    } catch (err:any) {
+      let errorMessage: string = "";
+      switch (err.response.data.type) {
+        case UserErrors.USERNAME_ALREADY_EXISTS:
+          errorMessage = "User already exists";
+          break;
+        case UserErrors.WRONG_CREDENTIALS:
+          errorMessage = "Wrong username/password combination";
+          break;
+        default:
+          errorMessage = "Something went wrong";
+      }
+
+      alert("ERROR: " + errorMessage);
+    }
+  };
+
+  return (
+    <div className="auth-container">
+      <form onSubmit={handleSubmit}>
+        <h2>Login</h2>
+        <div className="form-group">
+          <label htmlFor="username">Username:</label>
+          <input
+            type="text"
+            id="username"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password:</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </div>
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  );
+};
+
+const Register = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSubmit = async (event:any) => {
+    event.preventDefault();
+    try {
+      await axios.post("http://localhost:3001/auth/register", {
+        username,
+        password,
+      });
+      alert("Registration Completed! Now login.");
+    } catch (err:any) {
+      if (err.response.data.type === UserErrors.NO_USER_FOUND) {
+        alert("ERROR: No user found");
       } else {
         alert("ERROR: Something went wrong");
       }
@@ -39,84 +107,25 @@ const Register = () => {
       <form onSubmit={handleSubmit}>
         <h2>Register</h2>
         <div className="form-group">
-          <label htmlFor="username"> Username</label>
+          <label htmlFor="username">Username:</label>
           <input
             type="text"
             id="username"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          ></input>
+            onChange={(event) => setUsername(event.target.value)}
+          />
         </div>
-
         <div className="form-group">
-          <label htmlFor="username"> Password</label>
+          <label htmlFor="password">Password:</label>
           <input
             type="password"
             id="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          ></input>
+            onChange={(event) => setPassword(event.target.value)}
+          />
         </div>
-        <button type="submit" className="btn btn-primary">
-          Register
-        </button>
+        <button type="submit">Register</button>
       </form>
     </div>
   );
 };
-
-const Login = () => {
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-
-  const handleSubmit = async (event: SyntheticEvent) => {
-    event.preventDefault();
-    try {
-
-      await axios.post("http://localhost:3001/user/login", {
-        username,
-        password,
-      });
-
-      alert('Login Successful.')
-      
-    } catch (err:any) {
-      if (err?.response?.type === UserErrors.USER_NOT_FOUND) {
-        alert("ERROR: Username Doesn't Not Exist");
-      } else {
-        alert("ERROR: Something went wrong");
-      }
-    }
-  };
-  return (
-    <div className="auth-container">
-      <form onSubmit={handleSubmit}>
-        <h2>Login</h2>
-        <div className="">
-          <label htmlFor="username"> Username</label>
-          <input
-            type="text"
-            value={username}
-            id="username"
-            onChange={(e) => setUsername(e.target.value)}
-          ></input>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="username"> Password</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          ></input>
-        </div>
-        <button type="submit" value={password} className="btn btn-primary">
-          Login
-        </button>
-      </form>
-    </div>
-  );
-};
-
-export default Auth;

@@ -1,6 +1,6 @@
 import express from 'express';
+import sequelize from './models/sequelize';
 import cors from 'cors';
-import mongoose from 'mongoose';
 import { userRouter } from './routes/User'
 
 
@@ -8,11 +8,15 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.use('/user', userRouter);
+sequelize.sync({ force: false }) // Set force:true to drop and re-create tables on every app start
+  .then(() => {
+    console.log('All models were synchronized successfully.');
+  })
+  .catch((error) => {
+    console.error('Error synchronizing models:', error);
+  });
 
-mongoose.connect(
-    "mongodb+srv://protio:protio@ecommerce.unjlaet.mongodb.net/"
-);
+app.use('/user', userRouter);
 
 const port = 3001;
 
